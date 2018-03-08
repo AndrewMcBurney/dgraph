@@ -31,6 +31,7 @@ import (
 	"github.com/dgraph-io/dgraph/raftwal"
 	"github.com/dgraph-io/dgraph/x"
 	"github.com/gogo/protobuf/proto"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 var (
@@ -69,6 +70,9 @@ type Server struct {
 }
 
 func (s *Server) Init() {
+	span := opentracing.StartSpan("zero.Init")
+	defer span.Finish()
+
 	s.Lock()
 	defer s.Unlock()
 
@@ -118,6 +122,9 @@ func (s *Server) member(addr string) *intern.Member {
 }
 
 func (s *Server) Leader(gid uint32) *conn.Pool {
+	span := opentracing.StartSpan("zero.Leader")
+	defer span.Finish()
+
 	s.RLock()
 	defer s.RUnlock()
 	if s.state == nil {
@@ -327,6 +334,8 @@ func (s *Server) removeNode(ctx context.Context, nodeId uint64, groupId uint32) 
 // Connect is used to connect the very first time with group zero.
 func (s *Server) Connect(ctx context.Context,
 	m *intern.Member) (resp *intern.ConnectionState, err error) {
+	span := opentracing.StartSpan("zero.Connect")
+	defer span.Finish()
 	// Ensures that connect requests are always serialized
 	s.connectLock.Lock()
 	defer s.connectLock.Unlock()
@@ -432,6 +441,9 @@ func (s *Server) Connect(ctx context.Context,
 
 func (s *Server) ShouldServe(
 	ctx context.Context, tablet *intern.Tablet) (resp *intern.Tablet, err error) {
+	span := opentracing.StartSpan("zero.ShouldServe")
+	defer span.Finish()
+
 	if len(tablet.Predicate) == 0 {
 		return resp, errEmptyPredicate
 	}
@@ -495,6 +507,9 @@ func (s *Server) receiveUpdates(stream intern.Zero_UpdateServer) error {
 }
 
 func (s *Server) Update(stream intern.Zero_UpdateServer) error {
+	span := opentracing.StartSpan("zero.Update")
+	defer span.Finish()
+
 	che := make(chan error, 1)
 	// Server side cancellation can only be done by existing the handler
 	// since Recv is blocking we need to run it in a goroutine.

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/DataDog/dd-trace-go/tracer"
 	"github.com/dgraph-io/dgraph/protos/api"
 	"github.com/dgraph-io/dgraph/protos/intern"
 	"github.com/dgraph-io/dgraph/types"
@@ -119,6 +120,10 @@ func toUid(subject string, newToUid map[string]uint64) (uid uint64, err error) {
 var emptyEdge intern.DirectedEdge
 
 func (nq NQuad) createEdge(subjectUid uint64, newToUid map[string]uint64) (*intern.DirectedEdge, error) {
+	span := tracer.NewRootSpan("web.request", "dgraph", "createEdge")
+	defer span.Finish()
+	span.SetMeta("isWorking", "true")
+
 	var err error
 	var objectUid uint64
 
@@ -199,6 +204,10 @@ func (nq NQuad) ToDeletePredEdge() (*intern.DirectedEdge, error) {
 // ToEdgeUsing determines the UIDs for the provided XIDs and populates the
 // xidToUid map.
 func (nq NQuad) ToEdgeUsing(newToUid map[string]uint64) (*intern.DirectedEdge, error) {
+	span := tracer.NewRootSpan("web.request", "dgraph", "ToEdgeUsing")
+	defer span.Finish()
+	span.SetMeta("isWorking", "true")
+
 	var edge *intern.DirectedEdge
 	sUid, err := toUid(nq.Subject, newToUid)
 	if err != nil {

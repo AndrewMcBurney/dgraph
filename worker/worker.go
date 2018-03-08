@@ -34,6 +34,7 @@ import (
 	"github.com/dgraph-io/dgraph/posting"
 	"github.com/dgraph-io/dgraph/protos/intern"
 	"github.com/dgraph-io/dgraph/x"
+	opentracing "github.com/opentracing/opentracing-go"
 
 	"google.golang.org/grpc"
 )
@@ -54,6 +55,9 @@ func workerPort() int {
 }
 
 func Init(ps *badger.ManagedDB) {
+	span := opentracing.StartSpan("worker.Init")
+	defer span.Finish()
+
 	pstore = ps
 	// needs to be initialized after group config
 	pendingProposals = make(chan struct{}, Config.NumPendingProposals)
@@ -86,6 +90,9 @@ func (w *grpcWorker) addIfNotPresent(reqid uint64) bool {
 // RunServer initializes a tcp server on port which listens to requests from
 // other workers for intern.communication.
 func RunServer(bindall bool) {
+	span := opentracing.StartSpan("worker.RunServer")
+	defer span.Finish()
+
 	laddr := "localhost"
 	if bindall {
 		laddr = "0.0.0.0"

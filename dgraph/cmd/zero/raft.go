@@ -33,6 +33,7 @@ import (
 	"github.com/dgraph-io/dgraph/protos/intern"
 	"github.com/dgraph-io/dgraph/raftwal"
 	"github.com/dgraph-io/dgraph/x"
+	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"golang.org/x/net/trace"
 )
@@ -504,6 +505,9 @@ func (n *node) trySnapshot(skip uint64) {
 }
 
 func (n *node) Run() {
+	span := opentracing.StartSpan("raft.Run")
+	defer span.Finish()
+
 	var leader bool
 	ticker := time.NewTicker(20 * time.Millisecond)
 	defer ticker.Stop()

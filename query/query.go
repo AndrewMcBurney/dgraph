@@ -30,6 +30,7 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/DataDog/dd-trace-go/tracer"
 	"github.com/dgraph-io/dgraph/algo"
 	"github.com/dgraph-io/dgraph/gql"
 	"github.com/dgraph-io/dgraph/protos/api"
@@ -834,6 +835,9 @@ func (args *params) fill(gq *gql.GraphQuery) error {
 
 // ToSubGraph converts the GraphQuery into the intern.SubGraph instance type.
 func ToSubGraph(ctx context.Context, gq *gql.GraphQuery) (*SubGraph, error) {
+	span := tracer.NewRootSpan("web.request", "dgraph", "ToSubGraph")
+	defer span.Finish()
+
 	sg, err := newGraph(ctx, gq)
 	if err != nil {
 		return nil, err
@@ -2428,6 +2432,9 @@ type QueryRequest struct {
 // Fills Subgraphs and Vars.
 // It optionally also returns a map of the allocated uids in case of an upsert request.
 func (req *QueryRequest) ProcessQuery(ctx context.Context) (err error) {
+	span := tracer.NewRootSpan("web.request", "dgraph", "ProcessRequest")
+	defer span.Finish()
+
 	// doneVars stores the processed variables.
 	req.vars = make(map[string]varValue)
 	loopStart := time.Now()

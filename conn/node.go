@@ -32,6 +32,7 @@ import (
 	"github.com/dgraph-io/dgraph/protos/intern"
 	"github.com/dgraph-io/dgraph/raftwal"
 	"github.com/dgraph-io/dgraph/x"
+	opentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 )
 
@@ -69,6 +70,9 @@ type Node struct {
 }
 
 func NewNode(rc *intern.RaftContext) *Node {
+	span := opentracing.StartSpan("node.NewNode")
+	defer span.Finish()
+
 	store := raft.NewMemoryStorage()
 	n := &Node{
 		Id:    rc.Id,
@@ -389,6 +393,9 @@ func (n *Node) DeletePeer(pid uint64) {
 }
 
 func (n *Node) AddToCluster(ctx context.Context, pid uint64) error {
+	span := opentracing.StartSpan("node.AddToCluster")
+	defer span.Finish()
+
 	addr, ok := n.Peer(pid)
 	x.AssertTruef(ok, "Unable to find conn pool for peer: %d", pid)
 	rc := &intern.RaftContext{
@@ -451,6 +458,9 @@ type RaftServer struct {
 
 func (w *RaftServer) JoinCluster(ctx context.Context,
 	rc *intern.RaftContext) (*api.Payload, error) {
+	span := opentracing.StartSpan("node.JoinCluster")
+	defer span.Finish()
+
 	if ctx.Err() != nil {
 		return &api.Payload{}, ctx.Err()
 	}

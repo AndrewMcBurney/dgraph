@@ -22,10 +22,27 @@ import (
 	"runtime"
 	"time"
 
+	ddtrace "github.com/DataDog/dd-trace-go/opentracing"
 	"github.com/dgraph-io/dgraph/dgraph/cmd"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 func main() {
+	// create a Tracer configuration
+	config := ddtrace.NewConfiguration()
+	config.ServiceName = "dgraph"
+
+	// initialize a Tracer and ensure a graceful shutdown
+	// using the `closer.Close()`
+	tracer, closer, err := ddtrace.NewTracer(config)
+	if err != nil {
+		// handle the configuration error
+	}
+	defer closer.Close()
+
+	// set the Datadog tracer as a GlobalTracer
+	opentracing.SetGlobalTracer(tracer)
+
 	rand.Seed(time.Now().UnixNano())
 	// Setting a higher number here allows more disk I/O calls to be scheduled, hence considerably
 	// improving throughput. The extra CPU overhead is almost negligible in comparison. The
